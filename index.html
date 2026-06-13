@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Eco Nativo Pro Driver</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        :root {
+            --bg-idle: #0f172a;
+            --color-driver: #fbbf24; 
+            --color-client: #38bdf8; 
+            --color-muted: #475569; 
+            --card: #1e293b;
+        }
+
+        * { box-sizing: border-box; font-family: 'Inter', -apple-system, sans-serif; }
+        
+        /* Ajuste de altura dinámica para evitar que el botón se esconda */
+        body { 
+            background-color: var(--bg-idle); color: white; margin: 0; 
+            display: flex; flex-direction: column; 
+            height: 100vh; height: 100dvh; 
+            overflow: hidden; 
+        }
+
+        header { 
+            padding: calc(15px + env(safe-area-inset-top)) 20px 10px; 
+            background: rgba(0,0,0,0.3); display: flex; justify-content: space-between; align-items: center;
+            flex-shrink: 0;
+        }
+
+        .medbasha-sign { font-size: 8px; letter-spacing: 2px; opacity: 0.3; font-weight: bold; }
+
+        /* Área de visualización flexible */
+        .display-area {
+            flex: 1; display: flex; flex-direction: column; justify-content: center; 
+            padding: 20px; text-align: center; overflow: hidden;
+        }
+        #main-display {
+            font-size: 45px; font-weight: 900; line-height: 1.1; overflow-wrap: break-word;
+        }
+        #sub-display { font-size: 16px; color: #94a3b8; margin-top: 15px; }
+
+        /* Barra de Frases Rápidas con nuevos iconos */
+        .quick-actions {
+            display: flex; gap: 8px; overflow-x: auto; padding: 10px 20px;
+            -webkit-overflow-scrolling: touch; scrollbar-width: none; flex-shrink: 0;
+        }
+        .q-btn {
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
+            color: white; padding: 10px 16px; border-radius: 50px; white-space: nowrap; 
+            font-size: 13px; display: flex; align-items: center; gap: 6px;
+        }
+
+        /* PANEL DE CONTROL: Ajustado para que el botón suba */
+        .control-panel {
+            background: var(--card);
+            padding: 20px 20px calc(40px + env(safe-area-inset-bottom)); /* Más espacio abajo */
+            border-radius: 30px 30px 0 0;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+            flex-shrink: 0;
+            z-index: 100;
+        }
+
+        .lang-selector { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; }
+        .l-flag { 
+            font-size: 26px; background: none; border: 2px solid transparent; 
+            cursor: pointer; filter: grayscale(1); transition: 0.3s;
+        }
+        .l-flag.active { filter: grayscale(0); transform: scale(1.1); border-bottom: 2px solid var(--color-client); }
+
+        .action-btn {
+            width: 100%; padding: 22px; border-radius: 18px; border: none;
+            font-size: 16px; font-weight: 800; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-idle { background: #334155; color: #cbd5e1; }
+        .btn-active { background: #ef4444; color: white; animation: pulse 2s infinite; }
+
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+
+        .state-driver { color: var(--color-driver) !important; }
+        .state-client { color: var(--color-client) !important; }
+        .state-muted { color: var(--color-muted) !important; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div style="font-weight: 900; font-size: 11px;">ECO NATIVO <span style="color:var(--color-client)">PRO</span></div>
+        <div class="medbasha-sign">MEDBASHA</div>
+    </header>
+
+    <div class="display-area">
+        <div id="main-display" class="state-muted">IA EN REPOSO</div>
+        <div id="sub-display">Presione el botón inferior para comenzar</div>
+    </div>
+
+    <!-- Nuevos botones rápidos añadidos -->
+    <div class="quick-actions">
+        <button class="q-btn" onclick="forcePhrase('¿Le parece bien la temperatura del coche?')">🚗 Temp.</button>
+        <button class="q-btn" onclick="forcePhrase('¿Desea escuchar alguna música o emisora?')">🎵 Música</button>
+        <button class="q-btn" onclick="forcePhrase('¿Tiene prisa o prefiere una ruta tranquila?')">⌚ Prisa</button>
+        <button class="q-btn" onclick="forcePhrase('¿Cuál es su destino exacto?')">📍 Destino</button>
+        <button class="q-btn" onclick="forcePhrase('¿Desea pagar con tarjeta o efectivo?')">💳 Pago</button>
+        <button class="q-btn" onclick="forcePhrase('¿Le cierro su ventana?')">🪟 Ventana</button>
+    </div>
+
+    <div class="control-panel">
+        <div class="lang-selector">
+            <button class="l-flag active" onclick="setLang('en', this)">🇺🇸</button>
+            <button class="l-flag" onclick="setLang('fr', this)">🇫🇷</button>
+            <button class="l-flag" onclick="setLang('de', this)">🇩🇪</button>
+            <button class="l-flag" onclick="setLang('it', this)">🇮🇹</button>
+        </div>
+
+        <button id="master-btn" class="action-btn btn-idle" onclick="toggleSystem()">
+            🎤 INICIAR MODO INTELIGENTE
+        </button>
+    </div>
+
+    <script>
+        let isRunning = false;
+        let turn = 'driver'; 
+        let targetLang = 'en';
+        
+        const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        rec.continuous = false;
+        rec.interimResults = false;
+
+        function setLang(l, el) {
+            targetLang = l;
+            document.querySelectorAll('.l-flag').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function toggleSystem() {
+            isRunning = !isRunning;
+            const btn = document.getElementById('master-btn');
+            
+            if(isRunning) {
+                btn.innerText = "🛑 DETENER SISTEMA";
+                btn.className = "action-btn btn-active";
+                turn = 'driver';
+                startCycle();
+            } else {
+                btn.innerText = "🎤 INICIAR MODO INTELIGENTE";
+                btn.className = "action-btn btn-idle";
+                stopSystem();
+            }
+        }
+
+        function stopSystem() {
+            isRunning = false;
+            rec.stop();
+            window.speechSynthesis.cancel();
+            updateUI("IA EN REPOSO", "Micrófono desactivado", "state-muted");
+        }
+
+        async function startCycle() {
+            if(!isRunning) return;
+            const isDriver = turn === 'driver';
+            rec.lang = isDriver ? 'es-ES' : getFullCode(targetLang);
+            
+            updateUI(
+                isDriver ? "CONDUCTOR..." : "CLIENTE...", 
+                isDriver ? "Le escucho..." : "Passenger turn...",
+                isDriver ? "state-driver" : "state-client"
+            );
+
+            try { rec.start(); } catch(e) {}
+        }
+
+        rec.onresult = async (event) => {
+            const result = event.results[0][0];
+            const text = result.transcript;
+
+            if (result.confidence < 0.45) {
+                handleLowConfidence();
+                return;
+            }
+
+            const from = turn === 'driver' ? 'es' : targetLang;
+            const to = turn === 'driver' ? targetLang : 'es';
+            
+            const translated = await translateIA(text, from, to);
+            updateUI(translated, text, turn === 'driver' ? "state-client" : "state-driver");
+
+            speak(translated, turn === 'driver' ? getFullCode(targetLang) : 'es-ES', () => {
+                if(isRunning) {
+                    turn = (turn === 'driver') ? 'client' : 'driver';
+                    setTimeout(startCycle, 1000);
+                }
+            });
+        };
+
+        rec.onerror = () => isRunning && setTimeout(startCycle, 500);
+
+        async function translateIA(text, from, to) {
+            try {
+                const r = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${from}|${to}`);
+                const d = await r.json();
+                return d.responseData.translatedText;
+            } catch { return "Error de red"; }
+        }
+
+        function speak(text, lang, onEnd) {
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = lang; u.rate = 0.95;
+            u.onend = onEnd;
+            window.speechSynthesis.speak(u);
+        }
+
+        function forcePhrase(txt) {
+            if(!isRunning) toggleSystem();
+            window.speechSynthesis.cancel();
+            translateIA(txt, 'es', targetLang).then(res => {
+                updateUI(res, txt, "state-client");
+                speak(res, getFullCode(targetLang), () => {
+                    turn = 'client';
+                    startCycle();
+                });
+            });
+        }
+
+        function handleLowConfidence() {
+            const msg = turn === 'driver' ? "¿Puede repetir?" : "Please, repeat?";
+            updateUI(msg, "Ruido detectado", "state-muted");
+            speak(msg, turn === 'driver' ? 'es-ES' : getFullCode(targetLang), () => startCycle());
+        }
+
+        function updateUI(main, sub, cls) {
+            const m = document.getElementById('main-display');
+            m.innerText = main;
+            m.className = cls;
+            document.getElementById('sub-display').innerText = sub;
+        }
+
+        function getFullCode(l) {
+            return { 'en': 'en-US', 'fr': 'fr-FR', 'de': 'de-DE', 'it': 'it-IT' }[l];
+        }
+
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+    </script>
+</body>
+</html>
